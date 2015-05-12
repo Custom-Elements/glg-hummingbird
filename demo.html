@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+  <head>
+    <title>glg-hummingbird</title>
+    <link rel="import" href="https://services.glgresearch.com/ui-toolkit/polymer.html">
+    <link rel="import" href="https://services.glgresearch.com/ui-toolkit/node_modules/glg-current-user/src/glg-current-user.html">
+    <link rel="import" href="https://services.glgresearch.com/ui-toolkit/node_modules/ui-typeahead/src/ui-typeahead.html">
+    <link rel="import" href="https://services.glgresearch.com/ui-toolkit/node_modules/ui-fonts/fonts.html">
+    <link rel="import" href="src/glg-hummingbird.html">
+    <style>
+      body {
+        font-family: "Helvetica Neue", "Helvetica", "Arial";
+        color: #454545;
+      }
+    </style>
+  </head>
+  <body container unresolved>
+    <h1>Hummingbird demo</h1>
+    <div id="myHummingbirdDemo" tile style="margin: 20px 0px 10px 10px;">
+      <icon spinner id="hbfetching" class="progress"></icon>
+      <glg-current-user id="hbuser" username="{{username}}"></glg-current-user>
+      <glg-hummingbird
+        id="myprojectsindex"
+        indexName="myprojects"
+        scoreThreshold="0.5"
+        secondarySortField="createDate"
+        secondarySortOrder="desc"
+        howMany="10"
+        startPos="0"
+        variants={}
+      >
+      </glg-hummingbird>
+      <ui-typeahead
+          id="myprojectnames"
+          icon="fa-search"
+          placeholder="Type employee name..."
+          sticky
+          debounce="200">
+        <icon search></icon>
+
+        <!-- dynamically templated items in the selection list -->
+        <!-- assumes results are interleaved, not grouped by entity -->
+        <template id="foo" repeat="{{matches}}">
+          <ui-typeahead-item>
+          <span><strong>{{name}}</strong>, <i>{{title}}</i> | {{location}} office (&nbsp;id:{{id}}&nbsp;)</span>
+          </ui-typeahead-item>
+        </template>
+      </ui-typeahead>
+    </div>
+  </body>
+  <script src=="./node_modules/epiquery2/static/js/epiclient_v2.js"></script>
+  <script src="./glg-add-to-project.litcoffee"></script>
+  <script>
+    var hbProjects = document.querySelector('glg-hummingbird#myprojectsindex');
+    var qs = location.search.slice(1).split('&');
+    var qparams = {};
+    var epiStreamUrl = "wss://services.glgresearch.com/epistream-ldap/sockjs/websocket";
+    document.addEventListener('polymer-ready', function() {
+      // replace glg-hummingbird attributes with values from querystring where available
+      qs.forEach(function(item){
+        var p = item.split('=')
+        qparams[p[0]] = p[1];
+      });
+      if (typeof qparams['cmIds'] !== 'undefined') {
+        atp.setAttribute('cmIds', qparams['cmIds']);
+      }
+      if (typeof qparams['appName'] !== 'undefined') {
+        atp.setAttribute('appName', qparams['appName']);
+      }
+    });
+    document.addEventListener('inputchange', function(evt, detail, sender) {
+      //search hummingbird
+      hbProjects.search(detail.value)
+    });
+  </script>
+</html>

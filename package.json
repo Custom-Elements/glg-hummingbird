@@ -1,0 +1,19 @@
+{
+  "name": "glg-hummingbird",
+  "version": "0.1.0",
+  "dependencies": {
+    "epiquery2": "^0.4.0",
+    "hummingbird": "~2.0.2",
+    "polymer-serve": "^0.0.30"
+  },
+  "license": "ISC",
+  "scripts": {
+    "postinstall": "bower install",
+    "start": "polymer-serve --cache .",
+    "test": "polymer-serve ./"
+  },
+  "engines": {
+    "npm" : "2.5.1",
+    "node": "0.12.1"
+  }
+}
