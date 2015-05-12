@@ -42,19 +42,19 @@
         <!-- assumes results are interleaved, not grouped by entity -->
         <template id="foo" repeat="{{matches}}">
           <ui-typeahead-item>
-          <span><strong>{{name}}</strong>, <i>{{title}}</i> | {{location}} office (&nbsp;id:{{id}}&nbsp;)</span>
+          <span><strong>{{name}}</strong> (&nbsp;id: {{id}}&nbsp;)</span>
           </ui-typeahead-item>
         </template>
       </ui-typeahead>
     </div>
   </body>
-  <script src=="./node_modules/epiquery2/static/js/epiclient_v2.js"></script>
-  <script src="./glg-add-to-project.litcoffee"></script>
+  <script src="node_modules/epiquery2/static/js/epiclient_v2.js"></script>
   <script>
     var hbProjects = document.querySelector('glg-hummingbird#myprojectsindex');
     var qs = location.search.slice(1).split('&');
     var qparams = {};
     var epiStreamUrl = "wss://services.glgresearch.com/epistream-ldap/sockjs/websocket";
+    // TODO: Need to wire in the epistreamer
     document.addEventListener('polymer-ready', function() {
       // replace glg-hummingbird attributes with values from querystring where available
       qs.forEach(function(item){
@@ -71,6 +71,10 @@
     document.addEventListener('inputchange', function(evt, detail, sender) {
       //search hummingbird
       hbProjects.search(detail.value)
+    });
+    document.addEventListener('NO_HB_INDEX', function(evt, detail, sender) {
+      // do sumpin'
+      console.log("ain't no index");
     });
   </script>
 </html>
