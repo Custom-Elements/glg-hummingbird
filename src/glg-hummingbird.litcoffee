@@ -45,13 +45,19 @@ Method for retrieving a single result from a hummingbird index by ID
           @fire 'HB_RESULTS', results
 
 ### upsert
-Method to insert new entries into the index or update existing entries
+method to insert new entries into the index or update existing entries
 
       upsert: (doc) ->
         unless doc?.name? and doc?.id?
           console.error "glg-hb: every hummingbird document must have a minimum of 'name' and 'id' properties"
         else
           @idx.add doc
+
+### bulkLoad
+method to insert new entries into the index or update existing entries
+
+      bulkLoad: (docs) ->
+        (@upsert doc for doc in docs)
 
 ### persist
 Method to persist hummingbird index to localStorage
