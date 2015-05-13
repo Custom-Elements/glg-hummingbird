@@ -57,7 +57,6 @@ Method to insert new entries into the index or update existing entries
 Method to persist hummingbird index to localStorage
 
       persist: () ->
-        localStorage.add @idx.toJson(), @indexName if @indexName?
         window.requestFileSystem window.TEMPORARY, null
         , (fs) =>
           # success handler
@@ -68,9 +67,9 @@ Method to persist hummingbird index to localStorage
                 # Do we care to share success?
                 return
               try
-                fileWriter.write JSON.stringify(@idx.toJSON())
+                fileWriter.write new Blob([JSON.stringify(@idx.toJSON())], {type: 'text/plain'})
               catch err
-                console.err "glg-hb: unable to persist #{@indexName} index: #{JSON.stringify err}"
+                console.error "glg-hb: unable to persist #{@indexName} index: #{JSON.stringify err}"
             , @__fileErrorHandler()
           , @__fileErrorHandler()
         , @__fileErrorHandler()
@@ -104,21 +103,26 @@ Internal method to handle various filesystem errors
 ## Polymer Lifecycle
 
       created: ->
-        @idx = new hummingbird(@variants)
+        # create an empty index
+        @idx = new hummingbird()
         window.requestFileSystem window.TEMPORARY, null
         , (fs) =>
           # success handler
           fs.root.getFile @indexName, {}, (fileEntry) =>
             fileEntry.file (file) =>
-              reader = new FileReader
-              idx = @idx
+              reader = new FileReader()
               reader.onerror = @__fileErrorHandler()
               reader.onloadend = (evt) ->
                 # @result is the text of the file read
-                try
-                  idx.load JSON.parse(@result)
-                catch err
-                  console.err "glg-hb: unable to load persisted index: #{JSON.stringify err}"
+                if @result? and @result isnt ''
+                  try
+                    # if we found a persisted index, replace our empty index with it
+                    _this.idx = hummingbird.Index.load JSON.parse(@result)
+                  catch err
+                    console.error "glg-hb: unable to load persisted #{_this.indexName} index: #{JSON.stringify err}"
+                else
+                  console.warn "glg-hb: found an empty file when trying to load persisted #{_this.indexName} index."
+                  _this.__fileErrorHandler() {code:FileError.NOT_FOUND_ERR}
               reader.readAsText file
             , @__fileErrorHandler()
           , @__fileErrorHandler()

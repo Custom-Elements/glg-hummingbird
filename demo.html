@@ -87,6 +87,7 @@
       for (var i=0; i < results.length; i++) {
         hbProjects.upsert(results[i]);
       }
+      hbProjects.persist();
     });
   </script>
 </html>
