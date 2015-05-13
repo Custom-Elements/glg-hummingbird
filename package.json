@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "dependencies": {
     "epiquery2": "^0.4.0",
-    "hummingbird": "~2.0.2",
+    "hummingbird": "~2.1.4",
     "polymer-serve": "^0.0.30"
   },
   "license": "ISC",

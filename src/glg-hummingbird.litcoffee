@@ -1,5 +1,5 @@
 # glg-hummingbird
-Polymer element to maintain hummingbird typeahead lists in browsers' localStorage
+Polymer element to maintain a hummingbird typeahead index that persists between browser restarts.
 
     hummingbird = require 'hummingbird'
     # shim for chrome file system access
@@ -45,7 +45,7 @@ Method for retrieving a single result from a hummingbird index by ID
           @fire 'HB_RESULTS', results
 
 ### upsert
-method to insert new entries into the index or update existing entries
+Method to insert new entries into the index or update existing entries
 
       upsert: (doc) ->
         unless doc?.name? and doc?.id?
@@ -54,7 +54,7 @@ method to insert new entries into the index or update existing entries
           @idx.add doc
 
 ### bulkLoad
-method to insert new entries into the index or update existing entries
+Method to insert new entries into the index or update existing entries
 
       bulkLoad: (docs) ->
         (@upsert doc for doc in docs)
@@ -93,17 +93,20 @@ Method to delete persisted file from disk
           , @__fileErrorHandler()
         , @__fileErrorHandler()
 
+### getCreateTime
+Method that returns the timestamp for the index creation (not persist or load).
+It has become the norm to incrementally add new documents to a hummingbird index, but not remove 'deleted' or obsolete documents.
+Given that convention, this method enables the consuming application to determine whether the persisted index is 'old' and
+should be purged from local storage and fully rebuilt from scratch to take into account documents that should no longer be in the index.
+
+      getCreateTime: () ->
+        @idx.createTime
+
 ### getLastUpdateTime
 Method that returns the timestamp for the last time the index was updated (including create, add, or remove, but not persist or load)
 
       getLastUpdateTime: () ->
         @idx.lastUpdate
-
-### getCreateTime
-Method that returns the timestamp for the index creation (not persist or load)
-
-      getCreateTime: () ->
-        @idx.createTime
 
 ### __fileErrorHandler
 Internal method to handle various filesystem errors
@@ -132,6 +135,7 @@ Internal method to handle various filesystem errors
               @fire 'FS_ERROR', err
 
 ## Polymer Lifecycle
+On element creation, load the named index if it exists and make it immediately available for use.
 
       created: ->
         # create an empty index
