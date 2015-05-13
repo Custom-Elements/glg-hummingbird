@@ -74,6 +74,31 @@ Method to persist hummingbird index to localStorage
           , @__fileErrorHandler()
         , @__fileErrorHandler()
 
+
+### purge
+Method to delete persisted file from disk
+
+      purge: () ->
+        window.requestFileSystem window.TEMPORARY, null, (fs) =>
+          fs.root.getFile @indexName, { create: false }, (fileEntry) =>
+            fileEntry.remove =>
+              console.log "glg-hb: purged persisted #{@indexName} index."
+            , @__fileErrorHandler()
+          , @__fileErrorHandler()
+        , @__fileErrorHandler()
+
+### getLastUpdateTime
+Method that returns the timestamp for the last time the index was updated (including create, add, or remove, but not persist or load)
+
+      getLastUpdateTime: () ->
+        @idx.lastUpdate
+
+### getCreateTime
+Method that returns the timestamp for the index creation (not persist or load)
+
+      getCreateTime: () ->
+        @idx.createTime
+
 ### __fileErrorHandler
 Internal method to handle various filesystem errors
 
