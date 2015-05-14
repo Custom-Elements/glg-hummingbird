@@ -16,11 +16,14 @@
   </head>
   <body container unresolved>
     <h1>Hummingbird demo</h1>
+    <p style="margin: 1em 0 1em 0;">
+      Take a look at the source code to see details of the API: <a target="_blank" href="http://github.com/Custom-Elements/glg-hummingbird/blob/master/src/glg-hummingbird.litcoffee">glg-hummingbird.litcoffee</a>
+    </p>
     <div id="myHummingbirdDemo" tile style="margin: 20px 0px 10px 10px;">
       <glg-current-user id="hbuser" username="{{username}}"></glg-current-user>
       <glg-hummingbird
-        id="myprojectsindex"
-        indexName="myprojects"
+        id="mypeepsindex"
+        indexName="mypeeps"
         scoreThreshold="0.5"
         secondarySortField="createDate"
         secondarySortOrder="desc"
@@ -30,7 +33,7 @@
       >
       </glg-hummingbird>
       <ui-typeahead
-          id="myprojectnames"
+          id="mypeepnames"
           icon="fa-search"
           placeholder="Type employee name..."
           sticky
@@ -49,7 +52,7 @@
   </body>
   <script src="node_modules/epiquery2/static/js/epiclient_v2.js"></script>
   <script>
-    var hbProjects = document.querySelector('glg-hummingbird#myprojectsindex');
+    var hbPeeps = document.querySelector('glg-hummingbird#mypeepsindex');
     var qs = location.search.slice(1).split('&');
     var qparams = {};
     var results = [
@@ -66,22 +69,22 @@
         qparams[p[0]] = p[1];
       });
       if (typeof qparams['indexName'] !== 'undefined') {
-        hbProjects.setAttribute('indexName', qparams['indexName']);
+        hbPeeps.setAttribute('indexName', qparams['indexName']);
       }
       if (typeof qparams['scoreThreshold'] !== 'undefined') {
-        hbProjects.setAttribute('scoreThreshold', qparams['scoreThreshold']);
+        hbPeeps.setAttribute('scoreThreshold', qparams['scoreThreshold']);
       }
       if (typeof qparams['secondarySortField'] !== 'undefined') {
-        hbProjects.setAttribute('secondarySortField', qparams['secondarySortField']);
+        hbPeeps.setAttribute('secondarySortField', qparams['secondarySortField']);
       }
       if (typeof qparams['secondarySortOrder'] !== 'undefined') {
-        hbProjects.setAttribute('secondarySortOrder', qparams['secondarySortOrder']);
+        hbPeeps.setAttribute('secondarySortOrder', qparams['secondarySortOrder']);
       }
       if (typeof qparams['howMany'] !== 'undefined') {
-        hbProjects.setAttribute('howMany', qparams['howMany']);
+        hbPeeps.setAttribute('howMany', qparams['howMany']);
       }
       if (typeof qparams['startPos'] !== 'undefined') {
-        hbProjects.setAttribute('startPos', qparams['startPos']);
+        hbPeeps.setAttribute('startPos', qparams['startPos']);
       }
     });
 
@@ -90,11 +93,11 @@
       var query = event.detail.value;
       if (isNaN(query)) {
         // you can typeahead search for results
-        hbProjects.search(query)
+        hbPeeps.search(query)
       }
       else {
         // or you can pull a specific document back by its ID
-        hbProjects.jump(query)
+        hbPeeps.jump(query)
       }
     });
 
@@ -107,9 +110,9 @@
     document.addEventListener('NO_HB_INDEX', function(evt, detail, sender) {
       console.log("ain't no index");
       // documents can be bulk loaded or upserted one by one
-      // e.g., hbProjects.upsert(result);
-      hbProjects.bulkLoad(results);
-      hbProjects.persist();
+      // e.g., hbPeeps.upsert(result);
+      hbPeeps.bulkLoad(results);
+      hbPeeps.persist();
     });
   </script>
 </html>

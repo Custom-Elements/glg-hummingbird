@@ -1,6 +1,6 @@
 {
   "name": "glg-hummingbird",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "dependencies": {
     "epiquery2": "^0.4.0",
     "hummingbird": "~2.1.4",
