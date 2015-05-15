@@ -1,10 +1,9 @@
 {
   "name": "glg-hummingbird",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "dependencies": {
-    "epiquery2": "^0.4.0",
     "hummingbird": "~2.1.4",
-    "polymer-serve": "^0.0.30"
+    "polymer-serve": "^0.0.34"
   },
   "license": "ISC",
   "scripts": {
