@@ -152,6 +152,7 @@ On element creation, load the named index if it exists and make it immediately a
                 if @result? and @result isnt ''
                   try
                     # if we found a persisted index, replace our empty index with it
+                    console.log "glg-hb: loading index #{_this.indexName} from localStorage"
                     _this.idx = hummingbird.Index.load JSON.parse(@result)
                   catch err
                     console.error "glg-hb: unable to load persisted #{_this.indexName} index: #{JSON.stringify err}"
