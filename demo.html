@@ -102,12 +102,12 @@
     });
 
     // listen for results and display when new results are returned
-    document.addEventListener('HB_RESULTS', function(evt, detail, sender) {
+    document.addEventListener('hb-results', function(evt, detail, sender) {
       document.querySelector('#typeAheadResults').model = {matches: evt.detail}
     });
 
     // if no index has yet been persisted, build it and save it
-    document.addEventListener('NO_HB_INDEX', function(evt, detail, sender) {
+    document.addEventListener('no-hb-index', function(evt, detail, sender) {
       console.log("ain't no index");
       // documents can be bulk loaded or upserted one by one
       // e.g., hbPeeps.upsert(result);
