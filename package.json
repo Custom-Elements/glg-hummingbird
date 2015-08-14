@@ -1,8 +1,8 @@
 {
   "name": "glg-hummingbird",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "dependencies": {
-    "hummingbird": "~2.1.4",
+    "hummingbird": "~2.1.5",
     "polymer-serve": "^0.0.34"
   },
   "license": "ISC",
@@ -11,7 +11,7 @@
     "test": "polymer-serve ./"
   },
   "engines": {
-    "npm" : "2.5.1",
+    "npm": "2.5.1",
     "node": "0.12.1"
   }
 }
