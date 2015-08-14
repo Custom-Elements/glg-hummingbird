@@ -8,14 +8,21 @@ Polymer element to maintain a hummingbird typeahead index that persists between 
     Polymer 'glg-hummingbird',
 
 ## Events
-### HB_RESULTS
+### hb-results
 This event is emitted when there are new hummingbird results returned where the payload is the results array.
 
-### NO_HB_INDEX
-This event is emitted when attempting to load a non-existent hummingbird index from persistence.
+### no-hb-index
+This event is emitted when attempting to load a non-existent hummingbird index from persistence or when
+it found an index file but was unable to load it into hummingbird.
 
-### FS_ERROR
+### hb-fs-error
 This event is emitted when there is an error interacting with the file system where the payload is the error object.
+
+### hb-loaded
+This event is emitted after a persisted index is finished loading.
+
+### hb-purged
+This event is emitted after a persisted index is successfully deleted from local storage and memory.
 
 ## Methods
 ### search
@@ -32,7 +39,7 @@ Method for retrieving results from a humminbird index
 
         #lookup by fuzzy name match
         @idx.search query, (results) =>
-          @fire 'HB_RESULTS', results
+          @fire 'hb-results', results
         , hbOptions
 
 ### jump
@@ -42,7 +49,7 @@ Method for retrieving a single result from a hummingbird index by ID
       jump: (id) ->
         #lookup by ID
         @idx.jump id, (results) =>
-          @fire 'HB_RESULTS', results
+          @fire 'hb-results', results
 
 ### upsert
 Method to insert new entries into the index or update existing entries
@@ -59,6 +66,13 @@ Method to insert new entries into the index or update existing entries
       bulkLoad: (docs) ->
         (@upsert doc for doc in docs)
 
+### numItems
+Method to insert new entries into the index or update existing entries
+
+      numItems: () ->
+        Object.keys(@idx?.metaStore?.root).length
+
+
 ### persist
 Method to persist hummingbird index to localStorage
 
@@ -68,30 +82,40 @@ Method to persist hummingbird index to localStorage
           # success handler
           fs.root.getFile @indexName, {create: true}, (fileEntry) =>
             fileEntry.createWriter (fileWriter) =>
-              fileWriter.onerror = @__fileErrorHandler()
-              fileWriter.onwriteend = (evt) ->
-                # Do we care to share success?
+              fileWriter.onerror = @__fileErrorHandler(@indexName)
+              fileWriter.onabort = () => console.debug "#{@indexName} write aborted"
+              fileWriter.onprogress = () => console.debug "#{@indexName} write progress"
+              fileWriter.onwritestart = () => console.debug "#{@indexName} write started"
+              fileWriter.onwrite = () => console.debug "#{@indexName} writing"
+              fileWriter.onwriteend = (evt) =>
+                console.debug "Successfully persisted #{@indexName}"
                 return
               try
-                fileWriter.write new Blob([JSON.stringify(@idx.toJSON())], {type: 'text/plain'})
+                idxJson = @idx.toJSON()
+                idxJsonStr = JSON.stringify(idxJson)
+                fileWriter.write new Blob([idxJsonStr], {type: 'text/plain'})
               catch err
                 console.error "glg-hb: unable to persist #{@indexName} index: #{JSON.stringify err}"
-            , @__fileErrorHandler()
-          , @__fileErrorHandler()
-        , @__fileErrorHandler()
+            , @__fileErrorHandler(@indexName)
+          , @__fileErrorHandler(@indexName)
+        , @__fileErrorHandler(@indexName)
 
 
 ### purge
 Method to delete persisted file from disk
 
       purge: () ->
-        window.requestFileSystem window.TEMPORARY, null, (fs) =>
+        window.requestFileSystem window.TEMPORARY, null
+        , (fs) =>
+          # success handler
           fs.root.getFile @indexName, { create: false }, (fileEntry) =>
             fileEntry.remove =>
-              console.log "glg-hb: purged persisted #{@indexName} index."
-            , @__fileErrorHandler()
-          , @__fileErrorHandler()
-        , @__fileErrorHandler()
+              console.debug "glg-hb: purged persisted #{@indexName} index."
+              @idx = new hummingbird()
+              @fire 'hb-purged', @indexName
+            , @__fileErrorHandler(@indexName)
+          , @__fileErrorHandler(@indexName)
+        , @__fileErrorHandler(@indexName)
 
 ### getCreateTime
 Method that returns the timestamp for the index creation (not persist or load).
@@ -111,28 +135,16 @@ Method that returns the timestamp for the last time the index was updated (inclu
 ### __fileErrorHandler
 Internal method to handle various filesystem errors
 
-      __fileErrorHandler: () ->
+      __fileErrorHandler: (indexName) ->
         #closure to maintain reference to Polymer object in scope
         (err) =>
-          switch err.code
-            when FileError.QUOTA_EXCEEDED_ERR
-              console.error 'glg-hb: QUOTA_EXCEEDED_ERR'
-              @fire 'FS_ERROR', err
-            when FileError.NOT_FOUND_ERR
-              console.debug "glg-hb: no persisted index: #{JSON.stringify err}"
-              @fire 'NO_HB_INDEX'
-            when FileError.SECURITY_ERR
-              console.error 'glg-hb: SECURITY_ERR'
-              @fire 'FS_ERROR', err
-            when FileError.INVALID_MODIFICATION_ERR
-              console.error 'glg-hb: INVALID_MODIFICATION_ERR'
-              @fire 'FS_ERROR', err
-            when FileError.INVALID_STATE_ERR
-              console.error 'glg-hb: INVALID_STATE_ERR'
-              @fire 'FS_ERROR', err
-            else
-              console.error 'glg-hb: unknown file system error'
-              @fire 'FS_ERROR', err
+          if err.name is "NotFoundError"
+            console.debug "glg-hb: #{indexName} - #{err.name}: #{err.message}"
+            @fire 'no-hb-index', @indexName
+          else
+            console.error "glg-hb: #{indexName} - #{err.name}: #{err.message}"
+            err.message = "#{@indexName}: #{err.message}"
+            @fire 'hb-fs-error', err
 
 ## Polymer Lifecycle
 On element creation, load the named index if it exists and make it immediately available for use.
@@ -146,23 +158,25 @@ On element creation, load the named index if it exists and make it immediately a
           fs.root.getFile @indexName, {}, (fileEntry) =>
             fileEntry.file (file) =>
               reader = new FileReader()
-              reader.onerror = @__fileErrorHandler()
+              reader.onerror = @__fileErrorHandler(@indexName)
               reader.onloadend = (evt) ->
                 # @result is the text of the file read
                 if @result? and @result isnt ''
                   try
                     # if we found a persisted index, replace our empty index with it
-                    console.log "glg-hb: loading index #{_this.indexName} from localStorage"
+                    console.debug "glg-hb: loading index #{_this.indexName} from localStorage"
                     _this.idx = hummingbird.Index.load JSON.parse(@result)
+                    _this.fire 'hb-loaded', _this.indexName
                   catch err
                     console.error "glg-hb: unable to load persisted #{_this.indexName} index: #{JSON.stringify err}"
+                    _this.fire 'no-hb-index', _this.indexName
                 else
                   console.warn "glg-hb: found an empty file when trying to load persisted #{_this.indexName} index."
-                  _this.__fileErrorHandler() {code:FileError.NOT_FOUND_ERR}
+                  _this.fire 'no-hb-index', _this.indexName
               reader.readAsText file
-            , @__fileErrorHandler()
-          , @__fileErrorHandler()
-        , @__fileErrorHandler()
+            , @__fileErrorHandler(@indexName)
+          , @__fileErrorHandler(@indexName)
+        , @__fileErrorHandler(@indexName)
 
       ready: ->
 
