@@ -56,7 +56,7 @@ Method to insert new entries into the index or update existing entries
 
       upsert: (doc) ->
         unless doc?.name? and doc?.id?
-          console.error "glg-hb: every hummingbird document must have a minimum of 'name' and 'id' properties"
+          console.warn "glg-hb: every hummingbird document must have a minimum of 'name' and 'id' properties"
         else
           @idx.add doc
 
@@ -67,7 +67,7 @@ Method to insert new entries into the index or update existing entries
         (@upsert doc for doc in docs)
 
 ### numItems
-Method to insert new entries into the index or update existing entries
+Method to get the number of entries in an index
 
       numItems: () ->
         Object.keys(@idx?.metaStore?.root).length
@@ -95,7 +95,7 @@ Method to persist hummingbird index to localStorage
                 idxJsonStr = JSON.stringify(idxJson)
                 fileWriter.write new Blob([idxJsonStr], {type: 'text/plain'})
               catch err
-                console.error "glg-hb: unable to persist #{@indexName} index: #{JSON.stringify err}"
+                console.debug "glg-hb: unable to persist #{@indexName} index: #{JSON.stringify err}"
             , @__fileErrorHandler(@indexName)
           , @__fileErrorHandler(@indexName)
         , @__fileErrorHandler(@indexName)
@@ -142,7 +142,7 @@ Internal method to handle various filesystem errors
             console.debug "glg-hb: #{indexName} - #{err.name}: #{err.message}"
             @fire 'no-hb-index', @indexName
           else
-            console.error "glg-hb: #{indexName} - #{err.name}: #{err.message}"
+            console.warn "glg-hb: #{indexName} - #{err.name}: #{err.message}"
             err.message = "#{@indexName}: #{err.message}"
             @fire 'hb-fs-error', err
 
@@ -168,7 +168,7 @@ On element creation, load the named index if it exists and make it immediately a
                     _this.idx = hummingbird.Index.load JSON.parse(@result)
                     _this.fire 'hb-loaded', _this.indexName
                   catch err
-                    console.error "glg-hb: unable to load persisted #{_this.indexName} index: #{JSON.stringify err}"
+                    console.warn "glg-hb: unable to load persisted #{_this.indexName} index: #{JSON.stringify err}"
                     _this.fire 'no-hb-index', _this.indexName
                 else
                   console.warn "glg-hb: found an empty file when trying to load persisted #{_this.indexName} index."
